@@ -1,0 +1,52 @@
+import boto3
+import time
+
+# Create CloudWatch client
+cloudwatch = boto3.client('cloudwatch', region_name='us-east-1')
+
+# Create custom metric
+def put_metric_data():
+    response = cloudwatch.put_metric_data(
+        Namespace='CustomAppMetrics',
+        MetricData=[
+            {
+                'MetricName': 'CPUUsage',
+                'Dimensions': [
+                    {
+                        'Name': 'InstanceId',
+                        'Value': 'i-1234567890abcdef0'  # Replace with your instance ID
+                    },
+                ],
+                'Value': 75.0,  # Simulated CPU Usage
+                'Unit': 'Percent'
+            },
+        ]
+    )
+    print("Metric data published:", response)
+
+# Create an alarm for the metric
+def create_alarm():
+    response = cloudwatch.put_metric_alarm(
+        AlarmName='HighCPUAlarm',
+        MetricName='CPUUsage',
+        Namespace='CustomAppMetrics',
+        Statistic='Average',
+        Period=60,
+        EvaluationPeriods=1,
+        Threshold=70.0,  # Threshold in percent
+        ComparisonOperator='GreaterThanThreshold',
+        AlarmActions=[
+            'arn:aws:sns:us-east-1:123456789012:MyTopic'  # Replace with your SNS Topic ARN
+        ],
+        Dimensions=[
+            {
+                'Name': 'InstanceId',
+                'Value': 'i-1234567890abcdef0'  # Replace with your instance ID
+            },
+        ]
+    )
+    print("Alarm created:", response)
+
+# Publish metric and create alarm
+put_metric_data()
+create_alarm()
